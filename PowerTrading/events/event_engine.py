@@ -29,7 +29,7 @@ class StandardEventEngine(object):
     def _run(self):
         while self._on:
             try:
-                event = self._event_queue.get(block=True, timeout=1)
+                event = self._event_queue.get(block=True, timeout=0)
                 self._process(event)
             except Empty:
                 pass
@@ -38,14 +38,16 @@ class StandardEventEngine(object):
         # check if the event type is standard or not
         if EventType.has_event(event.type):
             if event.type == "BarEvent":
-                [strategy.OnBar(event) for strategy in self.strategy_bucket if hasattr(strategy, "OnBar")]
+                # print([strategy. for strategy in self.strategy_bucket])
+                [self.strategy_bucket[strat_name].OnBar(event) for strat_name in self.strategy_bucket]
             elif event.type == "TickEvent":
-                [strategy.OnTick(event) for strategy in self.strategy_bucket if hasattr(strategy, "OnTick")]
+                [self.strategy_bucket[strat_name].OnTick(event) for strat_name in self.strategy_bucket]
+            elif event.type == "TerminateEvent":
+                self._on = False
             else:
                 warnings.warn("cannot handle this event %s" % event.type)
-        else:
-            for new_env in self.custom_bucket:
-                [handler(new_env) for handler in self.custom_bucket[new_env]]
+        elif event.type in self.custom_bucket:
+            [handler(event) for handler in self.custom_bucket[event.type]]
 
     def start(self):
         self._on = True
@@ -92,10 +94,10 @@ class StandardEventEngine(object):
         :param func:
         :return:
         """
-        if event in self.custom_bucket:
-            self.custom_bucket[event].append(func)
+        if event.type in self.custom_bucket:
+            self.custom_bucket[event.type].append(func)
         else:
-            self.custom_bucket[event] = [func]
+            self.custom_bucket[event.type] = [func]
 
     def unregister_custom_func(self, event, func):
         """
@@ -105,7 +107,7 @@ class StandardEventEngine(object):
         :return:
         """
         try:
-            self.custom_bucket[event].remove(func)
+            self.custom_bucket[event.type].remove(func)
         except ValueError:
             warnings.warn("cannot delete unregistered func")
 

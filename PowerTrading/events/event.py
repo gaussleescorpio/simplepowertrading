@@ -10,6 +10,7 @@ import logging
 class EventType(Enum):
     BarEvent = 0
     TickEvent = 1
+    TerminateEvent = 2
 
     @classmethod
     def has_event(cls, name):
@@ -26,10 +27,13 @@ class Event(ABC):
 
 
 class BarEvent(Event):
-    def __init__(self, data, ticker):
+    def __init__(self, data, ticker, flexile=False):
         super().__init__(type=EventType.BarEvent)
         assert isinstance(data, dict), "data must be dict to create an event"
-        self._create_event(data)
+        if not flexile:
+            self._create_event(data)
+        else:
+            self._create_flexible_event(data)
         self.ticker = ticker
 
     def _create_event(self, data):
@@ -44,6 +48,12 @@ class BarEvent(Event):
         except KeyError as e:
             logging.debug("input data format is wrong: %s" % str(e))
             raise ValueError("data format is wrong, not a valid bar data format")
+
+    def _create_flexible_event(self, data):
+        self._create_event(data)
+        for key in set(data.keys()).difference(("time", "high", "low", "open",
+                                                "close", "adj_close", "volume")):
+            setattr(self, key, data[key])
 
     def __repr__(self):
         return str(self)
@@ -93,3 +103,11 @@ class TickEvent(Event):
                                                           self.Bid1,
                                                           self.Bid1_Size)
         return format_str
+
+
+class TeminateEvent(Event):
+    def __init__(self):
+        super().__init__(type=EventType.TerminateEvent)
+
+    def _create_event(self, data):
+        pass
