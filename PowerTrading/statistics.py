@@ -8,7 +8,8 @@ class BacktestStat(object):
     Backtest class, simple vectorized one. Works with pandas objects.
     """
 
-    def __init__(self, price, signal, signalType='capital', initialCash=0, roundShares=True):
+    def __init__(self, price, signal, signalType='capital',
+                 initialCash=0, roundShares=True, commission=0):
         """
         Arguments:
         *price*  Series with instrument price.
@@ -44,7 +45,8 @@ class BacktestStat(object):
 
         delta = self.data['shares']  # shares bought sold
 
-        self.data['cash'] = (-delta * self.data['price']).fillna(0).cumsum() + initialCash
+        self.data['cash'] = (-delta * (self.data['price'] +
+                                       np.sign(delta) * commission)).fillna(0).cumsum() + initialCash
         self.data['pnl'] = self.data['cash'] + self.data['value'] - initialCash
         self.data['total_shares'] = self.data['shares'].cumsum()
 
@@ -113,16 +115,15 @@ class BacktestStat(object):
         axes[0].set_xlim([p.index[0], p.index[-1]])  # show full axis
 
         axes[0].legend(l, loc='best')
-        axes[0].set_title('trades')
+        axes[0].set_title("""Trades: Max_DD: %.2f%s and Sharpe: %s""" % (self.max_dd_percentage*100,
+                                                                         "%", str(self.sharpe)))
 
         pnl = self.data["pnl"]
-        print(self.max_dd_percentage, self.sharpe)
         pnl.plot(style='o-', subplots=True, ax=axes[1])
         axes[1].set_title("PNL PLOT")
-
         shares = self.data["total_shares"]
         shares.plot(style='o-', subplots=True, ax=axes[2])
-        axes[2].set_title("TOTAL_SHARES")
+        axes[2].set_title("Holding positions")
 
 
 def sharpe(pnl):
