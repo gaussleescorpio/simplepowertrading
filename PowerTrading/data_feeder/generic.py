@@ -44,7 +44,7 @@ class GenericDFBarEventFeeder(GenericEventFeeder):
                 self.event_engine.insert_event(event)
             except StopIteration:
                 self.active = False
-                self.event_engine.insert_event(TeminateEvent())
+                # self.event_engine.insert_event(TeminateEvent())
 
 
 if __name__ == "__main__":

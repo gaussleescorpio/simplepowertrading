@@ -7,7 +7,7 @@ import pandas as pd
 from matplotlib import pylab as plt
 
 if __name__ == "__main__":
-    data = pd.read_csv("/home/gauss/Documents/test_data.csv")
+    data = pd.read_csv("/home/gausslee/Documents/test_data.csv")
     data = data.rename(columns={"date": "time"})
     data["adj_close"] = data["close"]
     data.sort_index(ascending=False, inplace=True)
@@ -18,6 +18,7 @@ if __name__ == "__main__":
     strat = CtaSimpleStrategy("test_strat", ord_man)
     bbe = BacktestEngine(data_feeder, ee, strat)
     bbe.start_backtesting()
+    bbe.wait_until_stop()
     bbe.results_analysis_single_df()
     print(ord_man.ticker_order_recorder["test_symbol"])
     plt.show()

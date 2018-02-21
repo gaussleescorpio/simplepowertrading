@@ -42,8 +42,6 @@ class StandardEventEngine(object):
                 [self.strategy_bucket[strat_name].OnBar(event) for strat_name in self.strategy_bucket]
             elif event.type == "TickEvent":
                 [self.strategy_bucket[strat_name].OnTick(event) for strat_name in self.strategy_bucket]
-            elif event.type == "TerminateEvent":
-                self._on = False
             else:
                 warnings.warn("cannot handle this event %s" % event.type)
         elif event.type in self.custom_bucket:
@@ -59,6 +57,7 @@ class StandardEventEngine(object):
         """
         self._on = False
         self._event_thread.join()
+
 
     def register_strategy(self, strategy, name):
         """

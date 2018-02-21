@@ -13,8 +13,11 @@ class BacktestEngine(object):
         self.ee.register_strategy(strategy, strategy.strategy_name)
 
     def start_backtesting(self):
-        self.d_feeder.stream_data()
         self.ee.start()
+        self.d_feeder.stream_data()
+
+    def wait_until_stop(self):
+        self.ee.stop()
 
     def results_analysis_single_df(self):
         ret_data = self.d_feeder.data[["time", "close"]].copy()
@@ -22,12 +25,16 @@ class BacktestEngine(object):
                                       columns=["time", "position", "price", "order_size"])
         ret_data["time"] = pd.to_datetime(ret_data["time"])
         trading_signal["time"] = pd.to_datetime(trading_signal["time"])
+        print(trading_signal)
         data = pd.merge(ret_data, trading_signal, on="time", how="outer").reset_index(drop=True)
+        # print(data)
         data["position"] = data["position"].fillna(0)
         data.loc[data["price"].isnull(), "price"] = data["close"]
         data["order_size"] = data["order_size"].fillna(0)
         data = data.dropna(axis=1)
-        print(data)
+        data.set_index("time", drop=True, inplace=True)
+        print(data[data["position"]!=0].index.max())
+        print(data[data["position"]!=0].index.min())
         bt_ret = BacktestStat(price=data["price"], signal=data["position"], signalType="shares")
         bt_ret.plotTrades()
 
