@@ -42,6 +42,8 @@ class StandardEventEngine(object):
                 [self.strategy_bucket[strat_name].OnBar(event) for strat_name in self.strategy_bucket]
             elif event.type == "TickEvent":
                 [self.strategy_bucket[strat_name].OnTick(event) for strat_name in self.strategy_bucket]
+            elif event.type == "TerminateEvent":
+                self._on = False
             else:
                 warnings.warn("cannot handle this event %s" % event.type)
         elif event.type in self.custom_bucket:
@@ -51,13 +53,18 @@ class StandardEventEngine(object):
         self._on = True
         self._event_thread.start()
 
-    def stop(self):
+    def wait_until_stop(self):
         """
-        used to stop the whole event engine
+        wait for the stop event generation and stop safely. Recommended!
+        """
+        self._event_thread.join()
+
+    def force_stop(self):
+        """
+        Directly force to stop the ee. This does not care if the event in the queue is finished or not.
         """
         self._on = False
         self._event_thread.join()
-
 
     def register_strategy(self, strategy, name):
         """

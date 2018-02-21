@@ -1,4 +1,5 @@
 from PowerTrading.strategy.generic import GenericStrategy
+import time
 
 
 class CtaSimpleStrategy(GenericStrategy):
@@ -12,4 +13,5 @@ class CtaSimpleStrategy(GenericStrategy):
         elif event.ma5 < event.ma10 and self.order_manager.investory_size > 0:
             self.order_manager.send_order(-1, event.close, 10,
                                           event.ticker, event.time)
+
 

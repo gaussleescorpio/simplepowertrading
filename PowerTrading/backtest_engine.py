@@ -17,7 +17,7 @@ class BacktestEngine(object):
         self.d_feeder.stream_data()
 
     def wait_until_stop(self):
-        self.ee.stop()
+        self.ee.wait_until_stop()
 
     def results_analysis_single_df(self):
         ret_data = self.d_feeder.data[["time", "close"]].copy()
@@ -25,7 +25,7 @@ class BacktestEngine(object):
                                       columns=["time", "position", "price", "order_size"])
         ret_data["time"] = pd.to_datetime(ret_data["time"])
         trading_signal["time"] = pd.to_datetime(trading_signal["time"])
-        print(trading_signal)
+        # print(trading_signal)
         data = pd.merge(ret_data, trading_signal, on="time", how="outer").reset_index(drop=True)
         # print(data)
         data["position"] = data["position"].fillna(0)
@@ -33,9 +33,9 @@ class BacktestEngine(object):
         data["order_size"] = data["order_size"].fillna(0)
         data = data.dropna(axis=1)
         data.set_index("time", drop=True, inplace=True)
-        print(data[data["position"]!=0].index.max())
-        print(data[data["position"]!=0].index.min())
-        bt_ret = BacktestStat(price=data["price"], signal=data["position"], signalType="shares")
+        # print(data[data["position"]!=0].index.max())
+        # print(data[data["position"]!=0].index.min())
+        bt_ret = BacktestStat(price=data["price"], signal=data["position"]*data["order_size"], signalType="shares")
         bt_ret.plotTrades()
 
 

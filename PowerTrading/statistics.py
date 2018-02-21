@@ -69,6 +69,10 @@ class BacktestStat(object):
         '''easy access to pnl data column '''
         return self.data['pnl']
 
+    @property
+    def max_dd_percentage(self):
+        return maximum_drawdown(self.pnl)
+
     def plotTrades(self):
         """
         visualise trades on the price chart
@@ -95,7 +99,6 @@ class BacktestStat(object):
 
         # --- plot trades
         # colored line for long positions
-        print(self.data["shares"])
         idx = (self.data['shares'] > 0) #| (self.data['shares'] > 0).shift(1)
         if idx.any():
             p[idx].plot(style='go', subplots=True, ax=axes[0])
@@ -113,6 +116,7 @@ class BacktestStat(object):
         axes[0].set_title('trades')
 
         pnl = self.data["pnl"]
+        print(self.max_dd_percentage, self.sharpe)
         pnl.plot(style='o-', subplots=True, ax=axes[1])
         axes[1].set_title("PNL PLOT")
 
@@ -135,3 +139,17 @@ def odd_sharpe(pnl):
     if min_dd == 0:
         return 0
     return profit / abs(min_dd)
+
+
+def maximum_drawdown(pnl):
+    cum_max = pnl.cummax()
+    cum_max_diff = pnl - cum_max
+    max_dd_value = cum_max_diff.min()
+    index = cum_max_diff == max_dd_value
+    max_drop_from_val = cum_max.loc[index]
+    return (max_dd_value / max_drop_from_val).iloc[0]
+
+
+
+
+
